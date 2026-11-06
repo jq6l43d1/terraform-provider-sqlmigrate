@@ -1,0 +1,6 @@
+bin/
+dist/
+examples/
+modules/
+*.md
+**/.terraform/
