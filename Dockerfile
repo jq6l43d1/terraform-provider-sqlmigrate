@@ -30,11 +30,17 @@ RUN curl -fsSL -o /tmp/flyway.tar.gz \
  && echo "${FLYWAY_SHA256}  /tmp/flyway.tar.gz" | sha256sum -c - \
  && mkdir -p /opt/flyway \
  && tar -xzf /tmp/flyway.tar.gz -C /opt/flyway --strip-components=1 \
- && rm /tmp/flyway.tar.gz
+ && rm /tmp/flyway.tar.gz \
+ && chmod 0755 /opt/flyway/flyway
+# The tarball ships the launcher as 0744 (owner-only execute); the image runs
+# as a non-root user.
 
 FROM debian:trixie-slim
 COPY --from=flyway /opt/flyway /opt/flyway
 COPY --from=build /out/sqlmigrate-runner /usr/local/bin/sqlmigrate-runner
+# The runner is Go and verifies TLS (Cloud Storage, Cloud Run) against the
+# system CA bundle, which the slim image lacks. Flyway's Java has its own.
+COPY --from=flyway /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 # Flyway's launcher is a bash script; the slim image has bash. Run as a
 # non-root user with /tmp as home (Cloud Run's /tmp is writable).
 ENV SQLMIGRATE_FLYWAY=/opt/flyway/flyway \

@@ -356,13 +356,16 @@ Tested here:
   the runner, and a second run is a no-op.
 - **Flyway** works from a read-only install with no writable home, as in the
   image.
+- **Against real GCP:** the image built from this Dockerfile, `modules/runner-job`
+  and the provider, run from a CI pipeline with workload identity federation
+  credentials. The job reached Cloud SQL for PostgreSQL 18 through a Private
+  Service Connect endpoint and logged in with IAM database authentication
+  (`db_auth = "google-access-token"`). One apply ran two versioned migrations
+  and a repeatable one, and the next plan showed `No changes`.
+- **Checkov** on `modules/runner-job`: the only finding is CKV_GCP_62 (no
+  access logging on the bucket).
 
 Not yet tested:
-- **Against real GCP.** The Cloud Run and GCS calls have only met the fake.
-  Do the first real run in a test project.
-- **The Docker image build.** No Docker was available here.
-- **`modules/runner-job` beyond `terraform validate`.** It hasn't been
-  scanned with policy tools such as Checkov.
 - **MySQL and SQL Server.** Flyway handles them, but they haven't been tested
   here.
 
